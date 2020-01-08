@@ -19,14 +19,25 @@ widget:
     links: 'Links'
     tag_cloud: 'Tag Cloud'
     catalogue: 'Catalogue'
+    email:
+        title: 'Subscribe Email'
+        button: 'Subscribe'
 article:
     more: 'Read More'
     comments: 'Comments'
     read: 'read'
     about: 'About'
     words: 'words'
+donate:
+    title: 'Like this article? Support the author with'
+    alipay: 'Alipay'
+    wechat: 'Wechat'
+    paypal: 'Paypal'
+    patreon: 'Patreon'
 plugin:
     backtotop: 'Back to Top'
+    visit: '%s visits'
+    visitor: 'Visited by %s users'
 search:
     search: 'Search'
     hint: 'Type something...'

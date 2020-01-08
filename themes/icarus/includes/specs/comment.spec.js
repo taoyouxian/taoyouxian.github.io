@@ -24,30 +24,52 @@ const DisqusSpec = {
     }
 };
 
-const GitmentSpec = {
+const GitmentGitalkSpec = {
     owner: {
         [type]: 'string',
-        [doc]: 'Your GitHub ID',
+        [doc]: 'GitHub user ID',
         [required]: true,
-        [requires]: comment => comment.type === 'gitment'
+        [requires]: comment => comment.type === 'gitment' || comment.type === 'gitalk'
     },
     repo: {
         [type]: 'string',
-        [doc]: 'The repo to store comments',
+        [doc]: 'GitHub repo name to store comments',
         [required]: true,
-        [requires]: comment => comment.type === 'gitment'
+        [requires]: comment => comment.type === 'gitment' || comment.type === 'gitalk'
     },
     client_id: {
         [type]: 'string',
-        [doc]: 'Your client ID',
+        [doc]: 'GitHub application client ID',
         [required]: true,
-        [requires]: comment => comment.type === 'gitment'
+        [requires]: comment => comment.type === 'gitment' || comment.type === 'gitalk'
     },
     client_secret: {
         [type]: 'string',
-        [doc]: 'Your client secret',
+        [doc]: 'GitHub application client secret',
         [required]: true,
-        [requires]: comment => comment.type === 'gitment'
+        [requires]: comment => comment.type === 'gitment' || comment.type === 'gitalk'
+    },
+    admin: {
+        [type]: ['string', 'array'],
+        [doc]: 'GitHub repo owner and collaborators who can can initialize github issues',
+        [required]: true,
+        [requires]: comment => comment.type === 'gitalk',
+        '*': {
+            [type]: 'string',
+            [required]: true
+        }
+    },
+    create_issue_manually: {
+        [type]: 'boolean',
+        [doc]: 'Create GitHub issue manually for each page',
+        [defaultValue]: false,
+        [requires]: comment => comment.type === 'gitalk'
+    },
+    distraction_free_mode: {
+        [type]: 'boolean',
+        [doc]: 'Facebook-like distraction free mode',
+        [defaultValue]: false,
+        [requires]: comment => comment.type === 'gitalk'
     }
 };
 
@@ -104,7 +126,7 @@ const ValineSpec = {
 
 module.exports = {
     [type]: 'object',
-    [doc]: 'Comment plugin settings\nhttp://ppoffice.github.io/hexo-theme-icarus/categories/Configuration/Comment-Plugins',
+    [doc]: 'Comment plugin settings\nhttps://ppoffice.github.io/hexo-theme-icarus/categories/Plugins/Comment',
     type: {
         [type]: 'string',
         [doc]: 'Name of the comment plugin',
@@ -112,7 +134,7 @@ module.exports = {
     },
     ...ChangYanSpec,
     ...DisqusSpec,
-    ...GitmentSpec,
+    ...GitmentGitalkSpec,
     ...IssoSpec,
     ...LiveReSpec,
     ...ValineSpec

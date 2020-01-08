@@ -5,27 +5,42 @@
 *     <%- _list_archives() %>
 *     <%- _list_categories() %>
 *     <%- _list_tags() %>
-*     <%- _toc() %>
-*     <%- _js() %>
-*     <%- _css() %>
+*     <%- _toc(content) %>
+*     <%- _js(url, defer, async) %>
+*     <%- _css(url) %>
+*     <%- _partial(url) %>
  */
 const cheerio = require('cheerio');
+const { existsSync } = require('fs');
+const { relative, dirname, join, extname } = require('path');
+const { LRUMap } = require('../utils/lru');
+
+const __archives = [];
+const __categories = [];
+const __tags = [];
+
+const __fragmentCache = new LRUMap(20);
 
 module.exports = function (hexo) {
     hexo.extend.helper.register('_list_archives', function () {
+        if (__archives.length) {
+            return __archives;
+        }
         const $ = cheerio.load(this.list_archives(), { decodeEntities: false });
-        const archives = [];
         $('.archive-list-item').each(function () {
-            archives.push({
+            __archives.push({
                 url: $(this).find('.archive-list-link').attr('href'),
                 name: $(this).find('.archive-list-link').text(),
                 count: $(this).find('.archive-list-count').text()
             });
         });
-        return archives;
+        return __archives;
     });
 
     hexo.extend.helper.register('_list_categories', function () {
+        if (__categories.length) {
+            return __categories;
+        }
         const $ = cheerio.load(this.list_categories({ depth: 2 }), { decodeEntities: false });
         function traverse(root) {
             const categories = [];
@@ -42,20 +57,23 @@ module.exports = function (hexo) {
             });
             return categories;
         }
-        return traverse($('.category-list'));
+        __categories.push(...traverse($('.category-list')));
+        return __categories;
     });
 
     hexo.extend.helper.register('_list_tags', function () {
+        if (__tags.length) {
+            return __tags;
+        }
         const $ = cheerio.load(this.list_tags(), { decodeEntities: false });
-        const tags = [];
         $('.tag-list-item').each(function () {
-            tags.push({
+            __tags.push({
                 url: $(this).find('.tag-list-link').attr('href'),
                 name: $(this).find('.tag-list-link').text(),
                 count: $(this).find('.tag-list-count').text()
             });
         });
-        return tags;
+        return __tags;
     });
 
     /**
@@ -138,5 +156,39 @@ module.exports = function (hexo) {
             url += '.css';
         }
         return `<link rel="stylesheet" href="${urlFor(url)}">`;
+    });
+
+    hexo.extend.helper.register('_partial', function (name, locals, options = {}) {
+        const { md5, partial, view_dir, page } = this;
+        const currentView = this.filename.substring(view_dir.length);
+        let _locals = Object.assign({}, locals, { layout: false });
+
+        let { path } = hexo.theme.getView(join(dirname(currentView), name)) || hexo.theme.getView(name);
+        path = join(view_dir, path.substring(0, path.length - extname(path).length) + '.locals.js');
+
+        if (!existsSync(path)) {
+            // fallback to default partial
+            return partial(name, locals, options);
+        }
+
+        _locals = require(path)(this, _locals);
+        if (_locals === null) {
+            // partial should be empty
+            return '';
+        }
+
+        if (_locals === false) {
+            // do not cache this fragment
+            return partial(name, locals, options);
+        }
+
+        const language = page.lang || page.language;
+        const fragment = relative(view_dir, path.substring(0, path.length - '.locals.js'.length));
+        const cacheId = [fragment, language, md5(JSON.stringify(_locals))].join('-');
+
+        if (!__fragmentCache.has(cacheId)) {
+            __fragmentCache.set(cacheId, partial(name, _locals, { cache: false, only: options.only || false }));
+        }
+        return __fragmentCache.get(cacheId);
     });
 }
