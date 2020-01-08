@@ -145,7 +145,19 @@ widgets:
             Github:
                 icon: fab fa-github
                 url: 'https://github.com/taoyouxian'
-            
+
+            Wechat:
+                icon: fa fa-home
+                url: ''
+
+            Email:
+                icon: fa fa-envelope
+                url: 'http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=taoyouxian@aliyun.com'
+
+            Resume:
+                icon: fa fa-user-md
+                url: ''
+
             # Facebook:
             #     icon: fab fa-facebook
             #     url: 'https://facebook.com'
